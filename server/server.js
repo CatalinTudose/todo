@@ -1,6 +1,5 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-const session = require("express-session");
 const passport = require("./auth/auth");
 const cors = require("cors");
 const mongoose = require("mongoose").default;
@@ -58,7 +57,7 @@ app.put("/tasks/update/:id", async (req, res) => {
 
 // Login endpoint
 app.post("/api/login", passport.authenticate("local"), (req, res) => {
-  res.json(req.user); // Return the authenticated user
+  res.json(req.user);
 });
 
 app.post("/api/logout", (req, res) => {
@@ -67,26 +66,28 @@ app.post("/api/logout", (req, res) => {
 });
 
 app.post("/api/register", async (req, res) => {
-  const { username, password } = req.body;
-
+  const { username, password, email } = req.body;
   try {
-    // Check if the username is already in use
     const existingUser = await UserModel.findOne({ username });
+    const existingEmail = await UserModel.findOne({ email });
 
     if (existingUser) {
       return res.status(400).json({ message: "Username already in use." });
     }
+    if (existingEmail) {
+      return res.status(400).json({ message: "Email already in use." });
+    }
 
-    const newUser = new UserModel({ username, password });
+    const newUser = new UserModel({ username, password, email });
     await newUser.save();
 
-    // Return a success message
     res.json({ message: "Registration successful." });
   } catch (error) {
     console.error("An error occurred during registration:", error);
     res.status(500).json({ message: "Registration failed. Please try again." });
   }
 });
+
 app.get("/api/protected", (req, res) => {
   if (req.isAuthenticated()) {
     res.json({ message: "This is a protected route" });
@@ -98,17 +99,8 @@ app.get("/api/protected", (req, res) => {
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(
-  session({
-    secret: "your-secret-key", // Replace with a secret key for session management
-    resave: false,
-    saveUninitialized: false,
-  }),
-);
-
+app.use(cors());
 // Initialize Passport and session support
-app.use(passport.initialize());
-app.use(passport.session());
 
 app.listen(port, () => {
   console.log("Server is running on port ", port);

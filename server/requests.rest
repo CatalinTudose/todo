@@ -16,3 +16,12 @@ DELETE http://localhost:3001/tasks/delete/651fcd714a6205e7c156b7d0
 
 PUT http://localhost:3001/tasks/update/651fe7510e7a3cd0103c46b3
 
+###
+
+POST http://localhost:3001/api/register
+
+{
+"username": "catalin.tudose",
+"password": "123456",
+"email": "catalin.tudose@ascendia.ro"
+}
