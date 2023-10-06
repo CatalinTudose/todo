@@ -66,6 +66,27 @@ app.post("/api/logout", (req, res) => {
   res.json({ message: "Logged out successfully" });
 });
 
+app.post("/api/register", async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    // Check if the username is already in use
+    const existingUser = await UserModel.findOne({ username });
+
+    if (existingUser) {
+      return res.status(400).json({ message: "Username already in use." });
+    }
+
+    const newUser = new UserModel({ username, password });
+    await newUser.save();
+
+    // Return a success message
+    res.json({ message: "Registration successful." });
+  } catch (error) {
+    console.error("An error occurred during registration:", error);
+    res.status(500).json({ message: "Registration failed. Please try again." });
+  }
+});
 app.get("/api/protected", (req, res) => {
   if (req.isAuthenticated()) {
     res.json({ message: "This is a protected route" });
