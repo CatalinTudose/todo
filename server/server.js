@@ -1,8 +1,12 @@
 const express = require("express");
-const mongoose = require("mongoose").default;
-const app = express();
+const bodyParser = require("body-parser");
+const session = require("express-session");
+const passport = require("./auth/auth");
 const cors = require("cors");
-const port = 3001;
+const mongoose = require("mongoose").default;
+const port = process.env.PORT || 3001;
+const app = express();
+const UserModel = require("./models/User");
 
 app.use(cors());
 app.use(express.json());
@@ -51,6 +55,39 @@ app.put("/tasks/update/:id", async (req, res) => {
   task.save();
   res.json(task);
 });
+
+// Login endpoint
+app.post("/api/login", passport.authenticate("local"), (req, res) => {
+  res.json(req.user); // Return the authenticated user
+});
+
+app.post("/api/logout", (req, res) => {
+  req.logout();
+  res.json({ message: "Logged out successfully" });
+});
+
+app.get("/api/protected", (req, res) => {
+  if (req.isAuthenticated()) {
+    res.json({ message: "This is a protected route" });
+  } else {
+    res.status(401).json({ message: "Unauthorized" });
+  }
+});
+
+// Middleware
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(
+  session({
+    secret: "your-secret-key", // Replace with a secret key for session management
+    resave: false,
+    saveUninitialized: false,
+  }),
+);
+
+// Initialize Passport and session support
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.listen(port, () => {
   console.log("Server is running on port ", port);
